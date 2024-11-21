@@ -1,0 +1,977 @@
+<!DOCTYPE html><html><head><base href="."><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><title>Ultimate Tic Tac Toe</title>
+<style>
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  background: #0d1117;
+  color: #c9d1d9;
+  perspective: 1000px;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+@keyframes titleColorFade {
+  0% {
+    color: #ff7b72; /* X color */
+  }
+  50% {
+    color: #58a6ff; /* O color */
+  }
+  100% {
+    color: #ff7b72; /* Back to X color */
+  }
+}
+
+h1 {
+  color: #ff7b72;
+  font-size: 32px;
+  margin: 10px 0; /* Reduced margin */
+  animation: titleColorFade 4s ease-in-out infinite;
+}
+
+.difficulty-display {
+  font-size: 14px;
+  color: #8b949e;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.game-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  flex: 1;
+  position: relative; /* Changed to relative */
+}
+
+.play-log {
+  background: #161b22;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  min-width: 200px;
+  max-height: 50vh; /* Limit height to half viewport */
+  overflow-y: auto;
+  order: -1;
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: #58a6ff #21262d;
+}
+
+.play-log::-webkit-scrollbar {
+  width: 8px;
+}
+
+.play-log::-webkit-scrollbar-track {
+  background: #21262d;
+  border-radius: 4px;
+}
+
+.play-log::-webkit-scrollbar-thumb {
+  background: #58a6ff;
+  border-radius: 4px;
+}
+
+.play-log::-webkit-scrollbar-thumb:hover {
+  background: #77b6ff;
+}
+
+.play-log h2 {
+  color: #c9d1d9;
+  font-size: 18px;
+  margin: 0 0 15px 0;
+}
+
+.log-entry {
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  border: 1px solid #30363d;
+}
+
+.log-entry:hover {
+  background: #21262d;
+}
+
+.log-entry.x-move {
+  color: #ff7b72;
+}
+
+.log-entry.o-move {
+  color: #58a6ff;
+}
+
+.cell.highlight {
+  background: rgba(240, 136, 62, 0.3);
+}
+
+#game-container {
+  transform: scale(0.9); /* Scale down slightly if needed */
+  transform-origin: center center;
+  background: #161b22;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  margin: 0 auto;
+  border: 1px solid #30363d;
+  position: relative;
+  flex-shrink: 0;
+}
+
+#status {
+  font-size: 24px;
+  margin: 10px 0; /* Reduced margin */
+}
+
+#status.x-turn {
+  color: #ff7b72; /* Red for X's turn */
+}
+
+#status.o-turn {
+  color: #58a6ff; /* Blue for O's turn */
+}
+
+#reset {
+  padding: 10px 20px;
+  font-size: 16px;
+  background: #238636;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 10px 0; /* Reduced margin */
+  font-weight: 500;
+}
+
+#reset:hover {
+  background: #2ea043;
+}
+
+.super-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  background: #0d1117;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.sub-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  background: #161b22;
+  padding: 5px;
+  border-radius: 6px;
+  transition: transform 0.6s, opacity 0.3s;
+  transform-style: preserve-3d;
+  position: relative;
+  min-height: 150px; /* Slightly reduced */
+  min-width: 150px; /* Slightly reduced */
+  border: 1px solid #30363d;
+}
+
+.sub-board.inactive:not(.flipping) {
+  opacity: 0.3;
+}
+
+.sub-board.flipping {
+  transform: rotateY(180deg);
+}
+
+.sub-board.flipping .cell {
+  display: none;
+}
+
+.sub-board.game-over:not(.winner-line) {
+  opacity: 0.5;
+}
+
+.cell {
+  width: 45px; /* Slightly reduced */
+  height: 45px; /* Slightly reduced */
+  background: #21262d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+  border: 1px solid #30363d;
+}
+
+.cell:hover {
+  background: #30363d;
+}
+
+.cell.x {
+  color: #ff7b72;
+}
+
+.cell.o {
+  color: #58a6ff;
+}
+
+.cell.draw {
+  color: #f0883e;
+}
+
+.winner-symbol {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 100px;
+  font-weight: bold;
+  transform: rotateY(180deg);
+  background: #161b22;
+  border-radius: 6px;
+}
+
+.winner-symbol.x {
+  color: #ff7b72;
+}
+
+.winner-symbol.o {
+  color: #58a6ff;
+}
+
+.winner-symbol.draw {
+  color: #f0883e;
+}
+
+.sub-board.won-x {
+  background: rgba(255, 123, 114, 0.1);
+}
+
+.sub-board.won-o {
+  background: rgba(88, 166, 255, 0.1);
+}
+
+.sub-board.won-draw {
+  background: rgba(240, 136, 62, 0.1);
+}
+
+.sub-board.active {
+  box-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
+}
+
+.sub-board.winner-line {
+  opacity: 1;
+}
+
+.difficulty-settings {
+  margin-bottom: 20px;
+}
+
+.difficulty-settings label {
+  display: block;
+  margin-bottom: 10px;
+  color: #c9d1d9;
+}
+
+.difficulty-select {
+  padding: 8px 12px;
+  font-size: 14px;
+  background: #21262d;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 200px;
+}
+
+.difficulty-select option {
+  background: #21262d;
+  color: #c9d1d9;
+}
+
+.difficulty-select:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+.ai-thinking {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #161b22;
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  color: #58a6ff;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+.ai-thinking.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #21262d;
+  border-top: 3px solid #58a6ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(13, 17, 23, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: #161b22;
+  padding: 30px;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+  text-align: center;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+  position: relative;
+}
+
+.modal-overlay.active .modal {
+  transform: scale(1);
+}
+
+.modal h2 {
+  color: #c9d1d9;
+  margin-bottom: 20px;
+}
+
+.start-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background: #238636;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.start-button:hover {
+  background: #2ea043;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #c9d1d9;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.close-button:hover {
+  color: #ff7b72;
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+<h1>Ultimate Tic Tac Toe</h1>
+<div id="difficulty-display" class="difficulty-display">Bot Difficulty: Medium</div>
+<div id="ai-thinking" class="ai-thinking fade-out">
+  <div class="spinner"></div>
+  <span>AI thinking...</span>
+</div>
+<div id="status" class="x-turn">X's Turn</div>
+<div class="game-layout">
+  <div class="play-log">
+<h2>Play Log</h2>
+<div id="log-entries"></div>
+<style>
+.play-log {
+  position: fixed;
+  left: 20px;
+  top: 20px;
+  z-index: 100;
+  max-height: calc(100vh - 40px);
+  background: #161b22;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+  min-width: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #58a6ff #21262d;
+}
+</style>
+</div>
+  <div id="game-container">
+    <div class="super-board" id="super-board"></div>
+  </div>
+</div>
+<button id="reset">New Game</button>
+
+<div class="modal-overlay" id="new-game-modal">
+  <div class="modal">
+    <button class="close-button" id="close-modal">×</button>
+    <h2>Start New Game</h2>
+    <div class="difficulty-settings">
+      <label for="difficulty">Bot Difficulty:</label>
+      <select id="difficulty" class="difficulty-select">
+        <option value="easy">Easy</option>
+        <option value="medium" selected="">Medium</option>
+        <option value="hard">Hard</option>
+        <option value="insane">Insane</option>
+      </select>
+    </div>
+    <button class="start-button" id="start-game">Start</button>
+  </div>
+</div>
+
+<script>
+class SuperTicTacToe {
+  constructor() {
+    this.currentPlayer = 'X';
+    this.superBoard = Array(9).fill().map(() => Array(9).fill(''));
+    this.subBoardWinners = Array(9).fill('');
+    this.activeBoard = -1;
+    this.gameWinner = null;
+    this.moveLog = [];
+    this.aiThinkingIndicator = document.getElementById('ai-thinking');
+    this.difficulty = 'medium';
+    this.updateDifficultyDisplay(); // Add this line
+    this.createBoard();
+    this.addEventListeners();
+  }
+
+  createBoard() {
+    const superBoard = document.getElementById('super-board');
+    superBoard.innerHTML = '';
+    
+    for (let i = 0; i < 9; i++) {
+      const subBoard = document.createElement('div');
+      subBoard.className = 'sub-board';
+      subBoard.dataset.board = i;
+
+      const isBoardFull = !this.superBoard[i].includes('');
+      const hasWinner = this.subBoardWinners[i];
+      
+      if (!hasWinner && !isBoardFull) {
+        for (let j = 0; j < 9; j++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.board = i;
+          cell.dataset.cell = j;
+          
+          if (this.superBoard[i][j]) {
+            cell.classList.add(this.superBoard[i][j].toLowerCase());
+            cell.textContent = this.superBoard[i][j];
+          }
+          
+          subBoard.appendChild(cell);
+        }
+      }
+
+      const winnerSymbol = document.createElement('div');
+      winnerSymbol.className = 'winner-symbol';
+      
+      if (hasWinner) {
+        winnerSymbol.classList.add(this.subBoardWinners[i].toLowerCase());
+        winnerSymbol.textContent = this.subBoardWinners[i];
+        subBoard.classList.add('flipping');
+        subBoard.classList.add(`won-${this.subBoardWinners[i].toLowerCase()}`);
+      } else if (isBoardFull) {
+        winnerSymbol.classList.add('draw');
+        winnerSymbol.textContent = '~';
+        subBoard.classList.add('flipping');
+        subBoard.classList.add('won-draw');
+      }
+      
+      subBoard.appendChild(winnerSymbol);
+      
+      if (this.activeBoard !== -1 && this.activeBoard !== i && !this.gameWinner && !hasWinner && !isBoardFull) {
+        subBoard.classList.add('inactive');
+      }
+      
+      if ((this.activeBoard === -1 || this.activeBoard === i) && !this.gameWinner) {
+        if (!this.subBoardWinners[i] && !isBoardFull) {
+          subBoard.classList.add('active');
+        }
+      }
+      
+      superBoard.appendChild(subBoard);
+    }
+  }
+
+  addEventListeners() {
+    document.getElementById('super-board').addEventListener('click', (e) => {
+      if (!e.target.classList.contains('cell')) return;
+      if (this.currentPlayer === 'O' || this.gameWinner) return;
+      
+      const boardIndex = parseInt(e.target.dataset.board);
+      const cellIndex = parseInt(e.target.dataset.cell);
+      
+      this.makeMove(boardIndex, cellIndex);
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      const modal = document.getElementById('new-game-modal');
+      modal.classList.add('active');
+    });
+
+    document.getElementById('start-game').addEventListener('click', () => {
+      const modal = document.getElementById('new-game-modal');
+      modal.classList.remove('active');
+      this.resetGame();
+    });
+
+    document.getElementById('difficulty').addEventListener('change', (e) => {
+      this.difficulty = e.target.value;
+      this.updateDifficultyDisplay(); // Update display on difficulty change
+    });
+
+    document.getElementById('close-modal').addEventListener('click', () => {
+      const modal = document.getElementById('new-game-modal');
+      modal.classList.remove('active');
+    });
+
+    document.getElementById('new-game-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'new-game-modal') {
+        const modal = document.getElementById('new-game-modal');
+        modal.classList.remove('active');
+      }
+    });
+  }
+
+  updateDifficultyDisplay() {
+    const difficultyDisplay = document.getElementById('difficulty-display');
+    const displayText = this.difficulty.charAt(0).toUpperCase() + this.difficulty.slice(1);
+    difficultyDisplay.textContent = `Bot Difficulty: ${displayText}`;
+  }
+
+  addMoveToLog(player, boardIndex, cellIndex) {
+    const moveText = `${player} played in board ${boardIndex + 1}, cell ${cellIndex + 1}`;
+    this.moveLog.push({
+      player,
+      boardIndex,
+      cellIndex,
+      text: moveText
+    });
+    this.updateMoveLog();
+  }
+
+  updateMoveLog() {
+    const logContainer = document.getElementById('log-entries');
+    logContainer.innerHTML = '';
+    
+    this.moveLog.slice().reverse().forEach((move) => {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${move.player.toLowerCase()}-move`;
+      entry.textContent = move.text;
+      
+      entry.addEventListener('mouseenter', () => {
+        const cell = document.querySelector(
+          `.cell[data-board="${move.boardIndex}"][data-cell="${move.cellIndex}"]`
+        );
+        if (cell) {
+          cell.classList.add('highlight');
+        }
+      });
+      
+      entry.addEventListener('mouseleave', () => {
+        const cell = document.querySelector(
+          `.cell[data-board="${move.boardIndex}"][data-cell="${move.cellIndex}"]`
+        );
+        if (cell) {
+          cell.classList.remove('highlight');
+        }
+      });
+      
+      logContainer.appendChild(entry);
+    });
+  }
+
+  makeMove(boardIndex, cellIndex) {
+    if (this.gameWinner) return;
+    if (this.subBoardWinners[boardIndex]) return;
+    if (this.activeBoard !== -1 && boardIndex !== this.activeBoard) return;
+    if (this.superBoard[boardIndex][cellIndex]) return;
+
+    this.superBoard[boardIndex][cellIndex] = this.currentPlayer;
+    this.addMoveToLog(this.currentPlayer, boardIndex, cellIndex);
+    
+    const winner = this.checkWin(this.superBoard[boardIndex]);
+    if (winner || !this.superBoard[boardIndex].includes('')) {
+      this.subBoardWinners[boardIndex] = winner || '~';
+      const superWinResult = this.checkWinWithLine(this.subBoardWinners);
+      
+      if (superWinResult) {
+        this.gameWinner = superWinResult.winner;
+        this.updateStatus(`${this.gameWinner} Wins the Game!`);
+        this.aiThinkingIndicator.classList.add('fade-out');
+        this.createBoard();
+        if (this.gameWinner === 'X') {
+          this.playConfetti();
+        }
+        return;
+      } else if (!this.subBoardWinners.includes('') && !this.gameWinner) {
+        this.gameWinner = 'DRAW';
+        const status = document.getElementById('status');
+        status.textContent = "Game is a Draw!";
+        status.style.color = '#f0883e';
+        this.aiThinkingIndicator.classList.add('fade-out');
+        this.createBoard();
+        return;
+      }
+    }
+
+    this.activeBoard = this.subBoardWinners[cellIndex] ? -1 : cellIndex;
+    this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+    this.updateStatus();
+    this.createBoard();
+
+    this.aiThinkingIndicator.classList.toggle('fade-out', this.currentPlayer === 'X');
+
+    if (this.currentPlayer === 'O' && !this.gameWinner) {
+      setTimeout(() => this.makeAIMove(), 500);
+    }
+  }
+
+  checkWinWithLine(board) {
+    const lines = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    for (let line of lines) {
+      const [a, b, c] = line;
+      if (board[a] && board[a] !== '~' && board[a] === board[b] && board[a] === board[c]) {
+        return {
+          winner: board[a],
+          line: line
+        };
+      }
+    }
+    
+    return null;
+  }
+
+  checkWin(board) {
+    const result = this.checkWinWithLine(board);
+    return result ? result.winner : null;
+  }
+
+  isWinningMove(boardIndex, cellIndex, player) {
+    this.superBoard[boardIndex][cellIndex] = player;
+    const result = this.checkWin(this.superBoard[boardIndex]);
+    this.superBoard[boardIndex][cellIndex] = '';
+    return result === player;
+  }
+
+  createsFork(boardIndex, cellIndex, player) {
+    this.superBoard[boardIndex][cellIndex] = player;
+    let winningLines = 0;
+    const lines = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    for (let line of lines) {
+      let playerCount = 0;
+      let emptyCount = 0;
+      
+      for (let pos of line) {
+        if (this.superBoard[boardIndex][pos] === player) playerCount++;
+        if (this.superBoard[boardIndex][pos] === '') emptyCount++;
+      }
+      
+      if (playerCount === 2 && emptyCount === 1) winningLines++;
+    }
+    
+    this.superBoard[boardIndex][cellIndex] = '';
+    return winningLines >= 2;
+  }
+
+  makeAIMove() {
+    if (this.difficulty === 'easy') {
+      this.makeRandomMove();
+    } else if (this.difficulty === 'medium') {
+      this.makeMediumMove();
+    } else if (this.difficulty === 'hard') {
+      this.makeHardMove();
+    } else if (this.difficulty === 'insane') {
+      this.makeInsaneMove();
+    }
+  }
+
+  makeRandomMove() {
+    const availableMoves = this.getAvailableMoves();
+    if (availableMoves.length > 0) {
+      const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+      this.makeMove(randomMove.boardIndex, randomMove.cellIndex);
+    }
+  }
+
+  makeMediumMove() {
+    const availableMoves = this.getAvailableMoves();
+    
+    for (const move of availableMoves) {
+      if (this.isWinningMove(move.boardIndex, move.cellIndex, 'O')) {
+        this.makeMove(move.boardIndex, move.cellIndex);
+        return;
+      }
+    }
+    
+    for (const move of availableMoves) {
+      if (this.isWinningMove(move.boardIndex, move.cellIndex, 'X')) {
+        this.makeMove(move.boardIndex, move.cellIndex);
+        return;
+      }
+    }
+    
+    this.makeRandomMove();
+  }
+
+  makeHardMove() {
+    const availableMoves = this.getAvailableMoves();
+    
+    for (const move of availableMoves) {
+      if (this.isWinningMove(move.boardIndex, move.cellIndex, 'O')) {
+        this.makeMove(move.boardIndex, move.cellIndex);
+        return;
+      }
+    }
+    
+    for (const move of availableMoves) {
+      if (this.isWinningMove(move.boardIndex, move.cellIndex, 'X')) {
+        this.makeMove(move.boardIndex, move.cellIndex);
+        return;
+      }
+    }
+    
+    for (const move of availableMoves) {
+      if (this.createsFork(move.boardIndex, move.cellIndex, 'O')) {
+        this.makeMove(move.boardIndex, move.cellIndex);
+        return;
+      }
+    }
+    
+    for (const move of availableMoves) {
+      if (this.createsFork(move.boardIndex, move.cellIndex, 'X')) {
+        this.makeMove(move.boardIndex, move.cellIndex);
+        return;
+      }
+    }
+    
+    const centerMove = availableMoves.find(move => move.cellIndex === 4);
+    if (centerMove) {
+      this.makeMove(centerMove.boardIndex, centerMove.cellIndex);
+      return;
+    }
+    
+    const cornerMove = availableMoves.find(move => [0,2,6,8].includes(move.cellIndex));
+    if (cornerMove) {
+      this.makeMove(cornerMove.boardIndex, cornerMove.cellIndex);
+      return;
+    }
+    
+    this.makeRandomMove();
+  }
+
+  makeInsaneMove() {
+    const availableMoves = this.getAvailableMoves();
+    let bestMove = null;
+    let bestScore = -Infinity;
+    
+    for (const move of availableMoves) {
+      this.superBoard[move.boardIndex][move.cellIndex] = 'O';
+      const score = this.minimax(move.boardIndex, move.cellIndex, 5, -Infinity, Infinity, false);
+      this.superBoard[move.boardIndex][move.cellIndex] = '';
+      
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = move;
+      }
+    }
+    
+    if (bestMove) {
+      this.makeMove(bestMove.boardIndex, bestMove.cellIndex);
+    } else {
+      this.makeRandomMove();
+    }
+  }
+
+  minimax(boardIndex, cellIndex, depth, alpha, beta, isMaximizing) {
+    if (depth === 0) {
+      return this.evaluatePosition();
+    }
+    
+    const winner = this.checkWin(this.superBoard[boardIndex]);
+    if (winner) {
+      return winner === 'O' ? 100 : -100;
+    }
+    
+    const nextBoard = this.subBoardWinners[cellIndex] ? -1 : cellIndex;
+    const availableMoves = this.getAvailableMoves(nextBoard);
+    
+    if (isMaximizing) {
+      let maxEval = -Infinity;
+      for (const move of availableMoves) {
+        this.superBoard[move.boardIndex][move.cellIndex] = 'O';
+        const evaluation = this.minimax(move.boardIndex, move.cellIndex, depth - 1, alpha, beta, false);
+        this.superBoard[move.boardIndex][move.cellIndex] = '';
+        maxEval = Math.max(maxEval, evaluation);
+        alpha = Math.max(alpha, evaluation);
+        if (beta <= alpha) break;
+      }
+      return maxEval;
+    } else {
+      let minEval = Infinity;
+      for (const move of availableMoves) {
+        this.superBoard[move.boardIndex][move.cellIndex] = 'X';
+        const evaluation = this.minimax(move.boardIndex, move.cellIndex, depth - 1, alpha, beta, true);
+        this.superBoard[move.boardIndex][move.cellIndex] = '';
+        minEval = Math.min(minEval, evaluation);
+        beta = Math.min(beta, evaluation);
+        if (beta <= alpha) break;
+      }
+      return minEval;
+    }
+  }
+
+  evaluatePosition() {
+    let score = 0;
+    for (let i = 0; i < 9; i++) {
+      if (this.subBoardWinners[i] === 'O') score += 10;
+      if (this.subBoardWinners[i] === 'X') score -= 10;
+    }
+    return score;
+  }
+
+  getAvailableMoves(specificBoard = null) {
+    const moves = [];
+    const validBoards = specificBoard === null ? 
+      (this.activeBoard === -1 ? Array.from({length: 9}, (_, i) => i) : [this.activeBoard]) :
+      (specificBoard === -1 ? Array.from({length: 9}, (_, i) => i) : [specificBoard]);
+
+    for (const boardIndex of validBoards) {
+      if (this.subBoardWinners[boardIndex]) continue;
+      for (let cellIndex = 0; cellIndex < 9; cellIndex++) {
+        if (!this.superBoard[boardIndex][cellIndex]) {
+          moves.push({boardIndex, cellIndex});
+        }
+      }
+    }
+    return moves;
+  }
+
+  resetGame() {
+    this.currentPlayer = 'X';
+    this.superBoard = Array(9).fill().map(() => Array(9).fill(''));
+    this.subBoardWinners = Array(9).fill('');
+    this.activeBoard = -1;
+    this.gameWinner = null;
+    this.moveLog = [];
+    this.difficulty = document.getElementById('difficulty').value;
+    this.updateDifficultyDisplay();
+    this.updateMoveLog();
+    this.updateStatus();
+    this.createBoard();
+    this.aiThinkingIndicator.classList.add('fade-out'); 
+  }
+
+  updateStatus(message) {
+    const status = document.getElementById('status');
+    status.textContent = message || `${this.currentPlayer}'s Turn`;
+    if (this.activeBoard !== -1 && !this.gameWinner) {
+      status.textContent += ` (Board ${this.activeBoard + 1})`;
+    }
+    status.className = this.currentPlayer === 'X' ? 'x-turn' : 'o-turn';
+  }
+
+  playConfetti() {
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+      });
+    }, 250);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  new SuperTicTacToe();
+});
+</script>
+</body></html>
