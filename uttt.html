@@ -1,4 +1,4 @@
-<!DOCTYPE html><html><head><base href="."><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><title>Ultimate Tic Tac Toe</title>
+<html><head><base href="."><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><title>Ultimate Tic Tac Toe</title>
 <style>
 body {
   display: flex;
@@ -55,17 +55,17 @@ h1 {
 }
 
 .play-log {
+  position: fixed;
+  left: 20px;
+  top: 20px;
+  z-index: 100;
+  max-height: calc(100vh - 40px); /* Limit height to viewport height minus margins */
   background: #161b22;
   padding: 15px;
   border-radius: 6px;
   border: 1px solid #30363d;
   min-width: 200px;
-  max-height: 50vh; /* Limit height to half viewport */
   overflow-y: auto;
-  order: -1;
-  position: absolute;
-  left: 20px;
-  top: 20px;
   scrollbar-width: thin;
   scrollbar-color: #58a6ff #21262d;
 }
@@ -113,6 +113,10 @@ h1 {
 
 .log-entry.o-move {
   color: #58a6ff;
+}
+
+.log-entry.new-game {
+  color: #8b949e; /* GitHub-style gray */
 }
 
 .cell.highlight {
@@ -424,33 +428,16 @@ h1 {
 </head>
 <body>
 <h1>Ultimate Tic Tac Toe</h1>
-<div id="difficulty-display" class="difficulty-display">Bot Difficulty: Medium</div>
+<div id="difficulty-display" class="difficulty-display">Difficulty: Medium</div>
 <div id="ai-thinking" class="ai-thinking fade-out">
   <div class="spinner"></div>
   <span>AI thinking...</span>
 </div>
 <div id="status" class="x-turn">X's Turn</div>
 <div class="game-layout">
-  <div class="play-log">
+  <div class="play-log" style="max-height: calc(100vh - 200px);">
 <h2>Play Log</h2>
 <div id="log-entries"></div>
-<style>
-.play-log {
-  position: fixed;
-  left: 20px;
-  top: 20px;
-  z-index: 100;
-  max-height: calc(100vh - 40px);
-  background: #161b22;
-  padding: 15px;
-  border-radius: 6px;
-  border: 1px solid #30363d;
-  min-width: 200px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #58a6ff #21262d;
-}
-</style>
 </div>
   <div id="game-container">
     <div class="super-board" id="super-board"></div>
@@ -483,12 +470,18 @@ class SuperTicTacToe {
     this.subBoardWinners = Array(9).fill('');
     this.activeBoard = -1;
     this.gameWinner = null;
-    this.moveLog = [];
+    // Initialize moveLog with "new game started" message
+    this.moveLog = [{
+      text: "New game started",
+      type: "new-game"
+    }];
     this.aiThinkingIndicator = document.getElementById('ai-thinking');
-    this.difficulty = 'medium';
+    this.initialDifficulty = 'medium'; // Store initial difficulty
+    this.difficulty = this.initialDifficulty;
     this.updateDifficultyDisplay(); // Add this line
     this.createBoard();
     this.addEventListeners();
+    this.updateMoveLog(); // Add this line to ensure the log is displayed immediately
   }
 
   createBoard() {
@@ -573,8 +566,9 @@ class SuperTicTacToe {
     });
 
     document.getElementById('difficulty').addEventListener('change', (e) => {
-      this.difficulty = e.target.value;
-      this.updateDifficultyDisplay(); // Update display on difficulty change
+      // Only store the selected difficulty, don't apply it yet
+      this.initialDifficulty = e.target.value;
+      // Don't update the display or current difficulty until new game starts
     });
 
     document.getElementById('close-modal').addEventListener('click', () => {
@@ -613,26 +607,34 @@ class SuperTicTacToe {
     
     this.moveLog.slice().reverse().forEach((move) => {
       const entry = document.createElement('div');
-      entry.className = `log-entry ${move.player.toLowerCase()}-move`;
+      
+      if (move.type === 'new-game') {
+        entry.className = 'log-entry new-game';
+      } else {
+        entry.className = `log-entry ${move.player.toLowerCase()}-move`;
+      }
+      
       entry.textContent = move.text;
       
-      entry.addEventListener('mouseenter', () => {
-        const cell = document.querySelector(
-          `.cell[data-board="${move.boardIndex}"][data-cell="${move.cellIndex}"]`
-        );
-        if (cell) {
-          cell.classList.add('highlight');
-        }
-      });
-      
-      entry.addEventListener('mouseleave', () => {
-        const cell = document.querySelector(
-          `.cell[data-board="${move.boardIndex}"][data-cell="${move.cellIndex}"]`
-        );
-        if (cell) {
-          cell.classList.remove('highlight');
-        }
-      });
+      if (move.boardIndex !== undefined && move.cellIndex !== undefined) {
+        entry.addEventListener('mouseenter', () => {
+          const cell = document.querySelector(
+            `.cell[data-board="${move.boardIndex}"][data-cell="${move.cellIndex}"]`
+          );
+          if (cell) {
+            cell.classList.add('highlight');
+          }
+        });
+        
+        entry.addEventListener('mouseleave', () => {
+          const cell = document.querySelector(
+            `.cell[data-board="${move.boardIndex}"][data-cell="${move.cellIndex}"]`
+          );
+          if (cell) {
+            cell.classList.remove('highlight');
+          }
+        });
+      }
       
       logContainer.appendChild(entry);
     });
@@ -920,8 +922,15 @@ class SuperTicTacToe {
     this.subBoardWinners = Array(9).fill('');
     this.activeBoard = -1;
     this.gameWinner = null;
-    this.moveLog = [];
-    this.difficulty = document.getElementById('difficulty').value;
+    
+    // Initialize moveLog with "new game started" message
+    this.moveLog = [{
+      text: "New game started",
+      type: "new-game"
+    }];
+    
+    // Apply the new difficulty setting only when starting a new game
+    this.difficulty = this.initialDifficulty;
     this.updateDifficultyDisplay();
     this.updateMoveLog();
     this.updateStatus();
