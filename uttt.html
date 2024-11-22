@@ -653,6 +653,69 @@ input:checked + .toggle-slider:before {
   font-weight: bold;
   font-size: 18px;
 }
+
+/* Add styles for rules button */
+.rules-button {
+  position: fixed;
+  bottom: 140px; /* Position below stats button */
+  right: 20px;
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  z-index: 1000;
+}
+
+.rules-button:hover {
+  transform: scale(1.1);
+}
+
+.rules-button svg {
+  width: 24px;
+  height: 24px;
+  fill: #c9d1d9;
+}
+
+/* Add styles for rules modal content */
+.rules-container {
+  text-align: left;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.rule-section {
+  margin-bottom: 20px;
+}
+
+.rule-section h3 {
+  color: #58a6ff;
+  margin-bottom: 10px;
+}
+
+.rule-section ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.rule-section li {
+  color: #c9d1d9;
+  margin-bottom: 8px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.rule-section li:before {
+  content: "•";
+  color: #58a6ff;
+  position: absolute;
+  left: 0;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
@@ -689,19 +752,42 @@ input:checked + .toggle-slider:before {
   </svg>
 </button>
 
-<!-- Add stats modal -->
-<div class="modal-overlay stats-modal" id="stats-modal">
+<!-- Add rules button below stats button (add before settings button) -->
+<button class="rules-button" id="rules-button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/>
+  </svg>
+</button>
+
+<!-- Add rules modal -->
+<div class="modal-overlay rules-modal" id="rules-modal">
   <div class="modal">
-    <button class="close-button" id="close-stats-modal">×</button>
-    <h2>User Statistics</h2>
-    <div class="stats-container">
-      <div class="stat-item">
-        <span class="stat-label">Wins</span>
-        <span class="stat-value" id="wins-count">0</span>
+    <button class="close-button" id="close-rules-modal">×</button>
+    <h2>How to Play</h2>
+    <div class="rules-container">
+      <div class="rule-section">
+        <h3>Basic Rules</h3>
+        <ul>
+          <li>The game is played on 9 small tic-tac-toe boards arranged in a 3x3 grid</li>
+          <li>Win 3 small boards in a row to win the game</li>
+          <li>Your move in one board determines which board your opponent must play in next</li>
+        </ul>
       </div>
-      <div class="stat-item">
-        <span class="stat-label">Losses</span>
-        <span class="stat-value" id="losses-count">0</span>
+      <div class="rule-section">
+        <h3>How to Move</h3>
+        <ul>
+          <li>When it's your turn, find the active board (highlighted in blue)</li>
+          <li>Click any empty cell in that board to place your mark</li>
+          <li>The cell you choose determines which board your opponent plays in next</li>
+        </ul>
+      </div>
+      <div class="rule-section">
+        <h3>Winning</h3>
+        <ul>
+          <li>Win a small board by getting 3 marks in a row</li>
+          <li>Win the game by winning 3 small boards in a row</li>
+          <li>If a board is full with no winner, it's marked as a draw (~)</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -755,6 +841,24 @@ input:checked + .toggle-slider:before {
   </div>
 </div>
 
+<!-- Add stats modal -->
+<div class="modal-overlay" id="stats-modal">
+  <div class="modal">
+    <button class="close-button" id="close-stats-modal">×</button>
+    <h2>Game Statistics</h2>
+    <div class="stats-container">
+      <div class="stat-item">
+        <span class="stat-label">Wins</span>
+        <span class="stat-value" id="wins-count">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Losses</span>
+        <span class="stat-value" id="losses-count">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 class SuperTicTacToe {
   constructor() {
@@ -779,6 +883,30 @@ class SuperTicTacToe {
     this.initializeSettings(); // Initialize settings functionality
     this.updateStatsDisplay(); // Add this line to initially show stats
     this.initializeStatsModal(); // Add this line
+    this.initializeRulesModal(); // Add this line to initialize rules modal
+  }
+
+  initializeRulesModal() {
+    const rulesButton = document.getElementById('rules-button');
+    const rulesModal = document.getElementById('rules-modal');
+    const closeRulesButton = document.getElementById('close-rules-modal');
+
+    // Rules button opens modal
+    rulesButton.addEventListener('click', () => {
+      rulesModal.classList.add('active');
+    });
+
+    // Close button closes modal
+    closeRulesButton.addEventListener('click', () => {
+      rulesModal.classList.remove('active');
+    });
+
+    // Clicking outside modal closes it
+    rulesModal.addEventListener('click', (e) => {
+      if (e.target === rulesModal) {
+        rulesModal.classList.remove('active');
+      }
+    });
   }
 
   initializeStatsModal() {
