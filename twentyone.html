@@ -1,0 +1,614 @@
+<html><head><base href=""><title>21 Card Game - GitHub Style</title>
+<style>
+:root {
+  --color-bg: #0d1117;
+  --color-text: #c9d1d9;
+  --color-border: #30363d;
+  --color-btn: #238636;
+  --color-btn-hover: #2ea043;
+  --color-card: #161b22;
+  --color-header: #21262d;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  margin: 0;
+  padding: 20px;
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header {
+  background: var(--color-header);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.game-area {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.dealer-section, .player-section {
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.card {
+  width: 70px;
+  height: 100px;
+  background: white;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #24292f;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+}
+
+.card.heart, .card.diamond { color: #cf222e; }
+
+.btn {
+  background: var(--color-btn);
+  border: 1px solid rgba(240,246,252,0.1);
+  border-radius: 6px;
+  color: white;
+  padding: 5px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.btn:hover {
+  background: var(--color-btn-hover);
+}
+
+.btn:disabled {
+  background: var(--color-header);
+  cursor: not-allowed;
+}
+
+.score {
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.hidden-card {
+  background: #30363d !important;
+  color: transparent !important;
+}
+
+@keyframes cardFlip {
+  0% {
+    transform: perspective(400px) rotateY(90deg);
+    opacity: 0;
+  }
+  100% {
+    transform: perspective(400px) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+.card {
+  transform: perspective(400px) rotateY(0deg);
+  transform-origin: left;
+  backface-visibility: hidden;
+}
+
+.card.new-card {
+  animation: cardFlip 0.5s ease-out;
+}
+
+.card.hidden-card {
+  animation: none;
+}
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+}
+
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-card);
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  text-align: center;
+  animation: modalFade 0.3s ease-out;
+}
+
+.tooltip {
+  position: absolute;
+  background: var(--color-header);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  white-space: nowrap;
+  z-index: 100;
+  color: #ffffff;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.card:hover .tooltip {
+  display: block;
+}
+
+.ace-value {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 12px;
+  color: #238636;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--color-text);
+  background: none;
+  border: none;
+  padding: 5px 10px;
+}
+
+.modal-close:hover {
+  color: #ffffff;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="game-area">
+    <div class="dealer-section">
+      <div class="score">Dealer's Score: <span id="dealer-score">?</span></div>
+      <div class="hand" id="dealer-hand"></div>
+    </div>
+    
+    <div class="player-section">
+      <div class="score">Your Score: <span id="player-score">0</span></div>
+      <div class="hand" id="player-hand"></div>
+    </div>
+    
+    <button class="btn" id="hit">Hit</button>
+    <button class="btn" id="stand">Stand</button>
+    <button class="btn" id="new-game">New Game</button>
+    <div id="message"></div>
+  </div>
+</div>
+
+<div id="ace-modal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeAceModal()">×</button>
+    <h3>Choose Ace Value</h3>
+    <p>Select the value for your Ace:</p>
+    <button class="btn" onclick="selectAceValue(1)">1</button>
+    <button class="btn" onclick="selectAceValue(11)">11</button>
+  </div>
+</div>
+
+<script>
+class Card {
+  constructor(value, suit) {
+    this.value = value;
+    this.suit = suit;
+    this.displayValue = value;
+    this.selectedAceValue = null;
+    this.autoSetValue = false; // Add this flag
+    if (value === 1) this.displayValue = 'A';
+    if (value === 11) this.displayValue = 'J';
+    if (value === 12) this.displayValue = 'Q';
+    if (value === 13) this.displayValue = 'K';
+  }
+
+  getGameValue() {
+    if (this.value > 10) return 10;
+    if (this.value === 1) return this.selectedAceValue || 11;
+    return this.value;
+  }
+
+  getSuitSymbol() {
+    switch(this.suit) {
+      case 'heart': return '♥';
+      case 'diamond': return '♦';
+      case 'club': return '♣';
+      case 'spade': return '♠';
+    }
+  }
+}
+
+class Deck {
+  constructor() {
+    this.cards = [];
+    const suits = ['heart', 'diamond', 'club', 'spade'];
+    for (let suit of suits) {
+      for (let value = 1; value <= 13; value++) {
+        this.cards.push(new Card(value, suit));
+      }
+    }
+    this.shuffle();
+  }
+
+  shuffle() {
+    for (let i = this.cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+    }
+  }
+
+  draw() {
+    return this.cards.pop();
+  }
+}
+
+class Game {
+  constructor() {
+    this.deck = new Deck();
+    this.playerHand = [];
+    this.dealerHand = [];
+    this.playerScore = 0;
+    this.dealerScore = 0;
+    this.isGameOver = false;
+  }
+
+  calculateScore(hand) {
+    let score = 0;
+    let aces = [];
+    
+    const cardsToScore = Array.isArray(hand) ? hand : hand.cards || [];
+    
+    for (let card of cardsToScore) {
+      if (card.value === 1) {
+        aces.push(card);
+      } else {
+        score += card.getGameValue();
+      }
+    }
+
+    for (let ace of aces) {
+      if (ace.selectedAceValue) {
+        if (score + ace.selectedAceValue > 21 && ace.selectedAceValue === 11) {
+          ace.selectedAceValue = 1;
+          ace.autoSetValue = true; // Set flag when automatically changing to 1
+        }
+        score += ace.selectedAceValue;
+      } else {
+        if (score + 11 <= 21) {
+          ace.selectedAceValue = 11;
+          score += 11;
+        } else {
+          ace.selectedAceValue = 1;
+          ace.autoSetValue = true; // Set flag when automatically setting to 1
+          score += 1;
+        }
+      }
+    }
+
+    return score;
+  }
+
+  updateScores(hideDealer = false) {
+    document.getElementById('player-score').textContent = this.playerScore;
+    document.getElementById('dealer-score').textContent = hideDealer ? '?' : this.dealerScore;
+  }
+
+  hit() {
+    if (this.isGameOver) return;
+    
+    this.playerHand.push(this.deck.draw());
+    
+    this.playerScore = this.calculateScore(this.playerHand);
+    
+    this.renderHands(true);
+    this.updateScores(true);
+
+    if (this.playerScore > 21) {
+      this.endGame('Bust! Dealer wins!');
+    }
+  }
+
+  dealInitialHand() {
+    this.playerHand = [this.deck.draw(), this.deck.draw()];
+    this.dealerHand = [this.deck.draw(), this.deck.draw()];
+    this.playerScore = this.calculateScore(this.playerHand);
+    this.dealerScore = this.calculateScore(this.dealerHand);
+    
+    setTimeout(() => {
+      this.renderHands(true);
+      this.updateScores(true);
+    }, 100);
+  }
+
+  renderHands(hideDealer = false) {
+    const dealerElement = document.getElementById('dealer-hand');
+    const playerElement = document.getElementById('player-hand');
+    dealerElement.innerHTML = '';
+    playerElement.innerHTML = '';
+    
+    this.dealerHand.forEach((card, index) => {
+      const cardElement = document.createElement('div');
+      cardElement.className = `card ${card.suit}`;
+      // Only add new-card class to dealer's last card if it's dealer's turn
+      if (!hideDealer && index === this.dealerHand.length - 1) cardElement.className += ' new-card';
+      if (hideDealer && index === 1) {
+        cardElement.className += ' hidden-card';
+        cardElement.innerHTML = '';
+      } else {
+        cardElement.innerHTML = `${card.displayValue}${card.getSuitSymbol()}`;
+        if (card.value === 1) {
+          cardElement.innerHTML += `<span class="ace-value">${card.selectedAceValue || 11}</span>`;
+        }
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.textContent = card.getGameValue();
+        cardElement.appendChild(tooltip);
+        
+        // Remove all click handlers for dealer's cards
+        cardElement.style.cursor = 'default';
+      }
+      dealerElement.appendChild(cardElement);
+    });
+
+    this.playerHand.forEach((card, index) => {
+      const cardElement = document.createElement('div');
+      cardElement.className = `card ${card.suit}`;
+      // Only add new-card class if it's player's turn (hideDealer is true)
+      if (hideDealer && index === this.playerHand.length - 1) cardElement.className += ' new-card';
+      cardElement.innerHTML = `${card.displayValue}${card.getSuitSymbol()}`;
+      if (card.value === 1) {
+        cardElement.innerHTML += `<span class="ace-value">${card.selectedAceValue || 11}</span>`;
+        
+        // Only allow value changes if ace wasn't automatically set to 1
+        if (!card.autoSetValue) {
+          const currentValue = card.selectedAceValue || 11;
+          const potentialScore = this.calculateScore(
+            this.playerHand.map(c => c === card ? 
+              {...c, selectedAceValue: currentValue === 11 ? 1 : 11} : c
+            )
+          );
+          
+          if ((currentValue === 11 && potentialScore <= 21) || 
+              (currentValue === 1 && potentialScore <= 21)) {
+            cardElement.style.cursor = 'pointer';
+            cardElement.onclick = () => this.promptAceValue(card, index);
+          } else {
+            cardElement.style.cursor = 'default';
+          }
+        } else {
+          cardElement.style.cursor = 'default';
+        }
+      }
+      
+      const tooltip = document.createElement('div');
+      tooltip.className = 'tooltip';
+      tooltip.textContent = card.getGameValue();
+      cardElement.appendChild(tooltip);
+      
+      playerElement.appendChild(cardElement);
+    });
+  }
+
+  promptAceValue(card, index) {
+    if (this.isGameOver || card.autoSetValue) return;
+    
+    const currentValue = card.selectedAceValue || 11;
+    const potentialScore = this.calculateScore(
+      this.playerHand.map(c => c === card ? 
+        {...c, selectedAceValue: currentValue === 11 ? 1 : 11} : c
+      )
+    );
+
+    // Check if ace value is locked (would cause bust if changed)
+    if ((currentValue === 1 && potentialScore > 21) || 
+        (currentValue === 11 && this.playerScore > 21)) {
+      return; // Exit early without showing modal if value is locked
+    }
+
+    const modal = document.getElementById('ace-modal');
+    modal.style.display = 'block';
+    
+    const closeOnClickOutside = (e) => {
+      if (e.target === modal) {
+        closeAceModal();
+        document.removeEventListener('click', closeOnClickOutside);
+      }
+    };
+    document.addEventListener('click', closeOnClickOutside);
+    
+    window.selectAceValue = (value) => {
+      const newScore = this.calculateScore(
+        this.playerHand.map(c => c === card ? {...c, selectedAceValue: value} : c)
+      );
+      
+      if (newScore <= 21) {
+        card.selectedAceValue = value;
+        closeAceModal();
+        document.removeEventListener('click', closeOnClickOutside);
+        this.playerScore = this.calculateScore(this.playerHand);
+        this.dealerScore = this.calculateScore(this.dealerHand);
+        
+        const playerElement = document.getElementById('player-hand');
+        playerElement.innerHTML = '';
+        
+        this.playerHand.forEach((c) => {
+          const cardElement = document.createElement('div');
+          cardElement.className = `card ${c.suit}`;
+          cardElement.innerHTML = `${c.displayValue}${c.getSuitSymbol()}`;
+          if (c.value === 1) {
+            cardElement.innerHTML += `<span class="ace-value">${c.selectedAceValue || 11}</span>`;
+            
+            const cValue = c.selectedAceValue || 11;
+            const pScore = this.calculateScore(
+              this.playerHand.map(pc => pc === c ? 
+                {...pc, selectedAceValue: cValue === 11 ? 1 : 11} : pc
+              )
+            );
+            
+            if ((cValue === 11 && pScore <= 21) || 
+                (cValue === 1 && pScore <= 21)) {
+              cardElement.style.cursor = 'pointer';
+              cardElement.onclick = () => this.promptAceValue(c);
+            } else {
+              cardElement.style.cursor = 'default';
+            }
+          }
+          
+          const tooltip = document.createElement('div');
+          tooltip.className = 'tooltip';
+          tooltip.textContent = c.getGameValue();
+          cardElement.appendChild(tooltip);
+          
+          playerElement.appendChild(cardElement);
+        });
+        
+        this.updateScores(true);
+        
+        if (this.playerScore > 21) {
+          this.endGame('Bust! Dealer wins!');
+        }
+      } else {
+        closeAceModal();
+      }
+    };
+  }
+
+  async dealerPlay() {
+    this.renderHands(false);
+    this.updateScores(false);
+    
+    // First check if dealer's current score is already winning
+    if (this.dealerScore <= 21 && this.dealerScore > this.playerScore) {
+        this.endGame('Dealer wins!');
+        return;
+    }
+    
+    // Dealer must hit on soft 17 and below
+    // AND must continue hitting if score is less than player's score
+    while (this.dealerScore < 17 || this.dealerScore < this.playerScore) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      this.dealerHand.push(this.deck.draw());
+      this.dealerScore = this.calculateScore(this.dealerHand);
+      this.renderHands(false);
+      this.updateScores(false);
+      
+      // Check after each new card if dealer has won
+      if (this.dealerScore <= 21 && this.dealerScore > this.playerScore) {
+          this.endGame('Dealer wins!');
+          return;
+      }
+      
+      // Stop if dealer busts
+      if (this.dealerScore > 21) break;
+    }
+
+    if (this.dealerScore > 21) {
+      this.endGame('Dealer busts! You win!');
+    } else if (this.dealerScore > this.playerScore) {
+      this.endGame('Dealer wins!');
+    } else if (this.dealerScore < this.playerScore) {
+      this.endGame('You win!');
+    } else {
+      this.endGame("It's a tie!");
+    }
+  }
+
+  async stand() {
+    if (this.isGameOver) return;
+    document.getElementById('hit').disabled = true;
+    document.getElementById('stand').disabled = true;
+    await this.dealerPlay();
+  }
+
+  endGame(message) {
+    this.isGameOver = true;
+    document.getElementById('message').textContent = message;
+    document.getElementById('hit').disabled = true;
+    document.getElementById('stand').disabled = true;
+  }
+
+  reset() {
+    this.deck = new Deck();
+    this.playerHand = [];
+    this.dealerHand = [];
+    this.playerScore = 0;
+    this.dealerScore = 0;
+    this.isGameOver = false;
+    document.getElementById('message').textContent = '';
+    document.getElementById('hit').disabled = false;
+    document.getElementById('stand').disabled = false;
+    this.dealInitialHand();
+  }
+}
+
+const game = new Game();
+game.dealInitialHand();
+
+document.getElementById('hit').addEventListener('click', () => game.hit());
+document.getElementById('stand').addEventListener('click', () => game.stand());
+document.getElementById('new-game').addEventListener('click', () => game.reset());
+
+function closeAceModal() {
+  const modal = document.getElementById('ace-modal');
+  modal.style.display = 'none';
+}
+</script>
+</body></html>
