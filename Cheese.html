@@ -1,0 +1,370 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cheese Typer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #1a1a1a;
+      color: #fff;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .container {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .typing-wrapper {
+      position: relative;
+      width: 500px;
+      display: flex;
+      justify-content: center;
+    }
+
+    #typing-display {
+      width: 100%;
+      font-size: 48px;
+      padding: 10px;
+      text-align: center;
+      color: #fff;
+      user-select: none;
+    }
+
+    #typing-display.preview {
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    #typing-display .correct {
+      color: white;
+    }
+
+    #typing-display .incorrect {
+      color: red;
+    }
+
+    #typing-display .preview-text {
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    .underline {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px; 
+      height: 4px;
+      background-color: #fff;
+      transition: width 0.3s ease;
+    }
+
+    #stats {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+    }
+
+    .info-box {
+      background-color: #2a2a2a;
+      border-radius: 8px;
+      width: 120px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-box-header {
+      background-color: #3a3a3a;
+      color: rgba(255,255,255,0.7);
+      padding: 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .info-box-content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      font-size: 24px;
+    }
+
+    .info-box-content .unit {
+      font-size: 12px;
+      margin-left: 5px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .reset-icon {
+      width: 20px;
+      height: 20px;
+      stroke: white;
+      margin-right: 5px;
+    }
+
+    button {
+      font-family: 'Roboto', Arial, sans-serif;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4a4a4a;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    button:hover {
+      background-color: #5a5a5a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="typing-wrapper">
+      <div id="typing-display" class="preview">cheese</div>
+      <div class="underline"></div>
+    </div>
+    <div id="stats">
+      <div class="info-box">
+        <div class="info-box-header">Time</div>
+        <div class="info-box-content">
+          <span id="time">0.00</span> 
+          <span class="unit">seconds</span>
+        </div>
+      </div>
+      <div class="info-box">
+        <div class="info-box-header">WPM</div>
+        <div class="info-box-content">
+          <span id="wpm">0</span>
+        </div>
+      </div>
+    </div>
+    <button id="reset-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="reset-icon">
+        <path d="M23 4v6h-6"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Reset
+    </button>
+  </div>
+  <script>
+    class CheeseTyper {
+      constructor() {
+        this.targetWord = 'cheese';
+        this.typingDisplay = document.getElementById('typing-display');
+        this.underline = document.querySelector('.underline');
+        this.timeDisplay = document.getElementById('time');
+        this.wpmDisplay = document.getElementById('wpm');
+        this.resetBtn = document.getElementById('reset-btn');
+        
+        this.currentText = '';
+        this.startTime = null;
+        this.isTyping = false;
+        this.isCompleted = false;
+        this.liveUpdateInterval = null;
+        
+        this.bindEvents();
+      }
+      
+      bindEvents() {
+        window.addEventListener('keydown', this.handleKeyPress.bind(this));
+        this.resetBtn.addEventListener('click', this.reset.bind(this));
+      }
+      
+      startLiveUpdate() {
+        // Clear any existing interval
+        if (this.liveUpdateInterval) {
+          clearInterval(this.liveUpdateInterval);
+        }
+        
+        // Start live updates of time and WPM
+        this.liveUpdateInterval = setInterval(() => {
+          if (this.startTime && !this.isCompleted) {
+            const currentTime = new Date();
+            const duration = (currentTime - this.startTime) / 1000;
+            
+            this.timeDisplay.textContent = duration.toFixed(2);
+            
+            // Calculate live WPM
+            const liveWPM = Math.round((this.currentText.length / 5) / (duration / 60));
+            this.wpmDisplay.textContent = liveWPM;
+          }
+        }, 50); // Update every 50ms for smooth display
+      }
+      
+      handleKeyPress(e) {
+        // If already completed, only allow reset
+        if (this.isCompleted) {
+          return;
+        }
+
+        // Check if the pressed key is a letter, space, or backspace
+        if (e.key.length === 1 && (e.key.match(/[a-z]/i) || e.key === ' ') || e.key === 'Backspace') {
+          if (!this.isTyping) {
+            this.startTime = new Date();
+            this.isTyping = true;
+            this.currentText = '';
+            this.typingDisplay.textContent = '';
+            this.typingDisplay.classList.remove('preview');
+            
+            // Start live updates of time and WPM
+            this.startLiveUpdate();
+          }
+          
+          // Limit input to 10 characters
+          if (e.key === 'Backspace') {
+            // Remove last character
+            this.currentText = this.currentText.slice(0, -1);
+          } else if (this.currentText.length < 10) {
+            // For space, only add if not the first character
+            if (e.key !== ' ' || this.currentText.length > 0) {
+              // Append the key to current text
+              this.currentText += e.key.toLowerCase();
+            }
+          }
+          
+          // Update display with color-coded characters and preview
+          this.updateDisplayWithColoredText();
+          
+          // Update underline width
+          const percentComplete = (this.currentText.length / this.targetWord.length) * 100;
+          this.underline.style.width = `${Math.max(50, percentComplete)}%`;
+          
+          // Check if the word is complete
+          if (this.currentText === this.targetWord) {
+            // Stop live updates
+            if (this.liveUpdateInterval) {
+              clearInterval(this.liveUpdateInterval);
+            }
+            
+            this.calculateSpeed();
+            this.isCompleted = true;
+            
+            // Trigger confetti
+            this.triggerConfetti();
+          }
+        }
+      }
+      
+      triggerConfetti() {
+        // Multiple confetti bursts to create a festive effect
+        const confettiColors = ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a'];
+        const confettiCount = 100;
+        const defaults = {
+          spread: 360,
+          ticks: 50,
+          gravity: 0,
+          decay: 0.94,
+          startVelocity: 30,
+          shapes: ['star'],
+          colors: confettiColors
+        };
+
+        function shoot() {
+          confetti({
+            ...defaults,
+            particleCount: confettiCount / 2,
+            origin: { y: 0.7, x: 0 }
+          });
+          confetti({
+            ...defaults,
+            particleCount: confettiCount / 2,
+            origin: { y: 0.7, x: 1 }
+          });
+        }
+
+        // Shoot multiple times for a more dynamic effect
+        setTimeout(shoot, 0);
+        setTimeout(shoot, 100);
+        setTimeout(shoot, 200);
+      }
+      
+      updateDisplayWithColoredText() {
+        // Clear previous content
+        this.typingDisplay.innerHTML = '';
+        
+        // First, add typed characters
+        let lastCorrectIndex = -1;
+        for (let i = 0; i < this.currentText.length; i++) {
+          const span = document.createElement('span');
+          span.textContent = this.currentText[i];
+          
+          // Check if the character is correct
+          if (i < this.targetWord.length && this.currentText[i] === this.targetWord[i]) {
+            span.classList.add('correct');
+            lastCorrectIndex = i;
+          } else {
+            span.classList.add('incorrect');
+          }
+          this.typingDisplay.appendChild(span);
+        }
+        
+        // Then, add preview text
+        const previewSpan = document.createElement('span');
+        const startPreviewIndex = lastCorrectIndex + 1;
+        
+        // If all typed chars are correct, show full remaining preview
+        if (lastCorrectIndex === this.currentText.length - 1) {
+          previewSpan.textContent = this.targetWord.slice(this.currentText.length);
+        } else {
+          // Show remaining preview from the target word
+          previewSpan.textContent = this.targetWord.slice(startPreviewIndex);
+        }
+        
+        previewSpan.classList.add('preview-text');
+        this.typingDisplay.appendChild(previewSpan);
+      }
+      
+      calculateSpeed() {
+        const endTime = new Date();
+        const duration = (endTime - this.startTime) / 1000;
+        
+        this.timeDisplay.textContent = duration.toFixed(2);
+        
+        // Calculate words per minute (simplified)
+        const wpm = Math.round((this.targetWord.length / 5) / (duration / 60));
+        this.wpmDisplay.textContent = wpm;
+      }
+      
+      reset() {
+        // Stop live updates if running
+        if (this.liveUpdateInterval) {
+          clearInterval(this.liveUpdateInterval);
+        }
+        
+        this.typingDisplay.innerHTML = 'cheese';
+        this.typingDisplay.classList.add('preview');
+        this.underline.style.width = '50px';
+        this.timeDisplay.textContent = '0.00';
+        this.wpmDisplay.textContent = '0';
+        this.startTime = null;
+        this.isTyping = false;
+        this.isCompleted = false;
+        this.currentText = '';
+      }
+    }
+
+    // Initialize the game when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      new CheeseTyper();
+    });
+  </script>
+</body>
+</html>
