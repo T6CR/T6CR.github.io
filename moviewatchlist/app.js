@@ -173,9 +173,6 @@ class WatchList {
         case 'type':
           comparison = a.type.localeCompare(b.type);
           break;
-        case 'duration':
-          comparison = a.duration.localeCompare(b.duration);
-          break;
         case 'watched':
           comparison = a.watchStatus === 'watched' ? -1 : 1;
           break;
