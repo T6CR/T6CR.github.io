@@ -1,0 +1,119 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watchlist</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="notifications-container" id="notificationsContainer">
+    <!-- Notifications will be added here dynamically -->
+  </div>
+  <div class="container">
+    <header>
+      <h1>Watchlist</h1>
+    </header>
+    
+    <main>
+      <div class="controls-bar">
+        <button id="addButton" class="sort-button add-button">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path d="M12 4v16m-8-8h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="sort-controls">
+          <button class="sort-button active desc" data-sort="date">
+            Date Added
+            <svg class="sort-icon" viewBox="0 0 24 24">
+              <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button class="sort-button" data-sort="name">
+            Name
+            <svg class="sort-icon" viewBox="0 0 24 24">
+              <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button class="sort-button" data-sort="type">
+            Type
+            <svg class="sort-icon" viewBox="0 0 24 24">
+              <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button class="sort-button" data-sort="duration">
+            Duration
+            <svg class="sort-icon" viewBox="0 0 24 24">
+              <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button class="sort-button" data-sort="watched">
+            Watch Status
+            <svg class="sort-icon" viewBox="0 0 24 24">
+              <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="Search titles..."
+        >
+      </div>
+      
+      <div class="movie-list" id="movieList">
+        <!-- Movies will be added here dynamically -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="addMovieModal" class="modal">
+    <div class="modal-content">
+      <h2>Add New Title</h2>
+      <div class="modal-form">
+        <div class="form-group">
+          <label for="movieInput">Title</label>
+          <input type="text" id="movieInput" placeholder="Enter title...">
+        </div>
+        <div class="form-group">
+          <label for="typeSelect">Type</label>
+          <div class="type-select-modal" data-value="movie">
+            <div class="type-select-header">
+              <span class="header-text">Movie</span>
+              <svg viewBox="0 0 24 24" width="12" height="12">
+                <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="type-select-options">
+              <div class="type-select-option" data-value="movie">Movie</div>
+              <div class="type-select-option" data-value="series">TV Series</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="durationInput">Duration</label>
+          <div class="duration-input-group">
+            <input type="text" id="durationInput" placeholder="e.g. 2h 30m or 1 Season">
+            <button id="scanButton" class="scan-button" disabled>
+              <span class="icon-container">
+                <svg class="scan-icon" viewBox="0 0 24 24" width="16" height="16">
+                  <path d="M9.5 3.25a6.25 6.25 0 1 0 0 12.5 6.25 6.25 0 1 0 0-12.5zM2 9.5a7.5 7.5 0 1 1 13.1 5.01l6.19 6.19a.75.75 0 0 1-1.06 1.06l-6.19-6.19A7.5 7.5 0 0 1 2 9.5z" fill="currentColor"/>
+                </svg>
+              </span>
+              Scan
+            </button>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="cancelButton" class="button-secondary">Cancel</button>
+          <button id="saveButton" class="button-primary">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
