@@ -11,6 +11,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  user-select: none;
 }
 
 body {
@@ -207,14 +208,10 @@ button:hover {
 
 .movie-title {
   position: relative;
-  cursor: pointer;
+  cursor: default;
   flex: 1;
   margin-left: 0.5rem;
   transition: color 0.2s ease;
-}
-
-.movie-title:hover {
-  color: var(--primary-color);
 }
 
 .movie-meta {
@@ -689,4 +686,12 @@ button:hover {
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+.tag {
+  background: var(--border-color);
+  color: var(--text-color);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
 }

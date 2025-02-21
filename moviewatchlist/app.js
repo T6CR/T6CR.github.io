@@ -25,14 +25,17 @@ class WatchList {
     this.modal = document.getElementById('addMovieModal');
     this.saveButton = document.getElementById('saveButton');
     this.cancelButton = document.getElementById('cancelButton');
-    this.durationInput = document.getElementById('durationInput');
-    this.scanButton = document.getElementById('scanButton');
+    this.durationInput = null; 
+    this.scanButton = null; 
     this.currentSort = 'date';
     this.sortDirection = 'desc';
   }
   
   init() {
-    this.addButton.addEventListener('click', () => this.openModal());
+    this.addButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.openModal();
+    });
     this.saveButton.addEventListener('click', () => this.addMovie());
     this.cancelButton.addEventListener('click', () => this.closeModal());
     
@@ -43,20 +46,6 @@ class WatchList {
     // Close modal when clicking outside
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) this.closeModal();
-    });
-    
-    // Enable scan button only when movie title is filled
-    this.movieInput.addEventListener('input', () => {
-      this.scanButton.disabled = !this.movieInput.value.trim();
-    });
-    
-    this.scanButton.addEventListener('click', () => this.scanDuration());
-    
-    // Add event delegation for watch status changes
-    this.movieList.addEventListener('change', (e) => {
-      if (e.target.classList.contains('watch-status')) {
-        this.updateWatchStatus(parseInt(e.target.dataset.id), e.target.value);
-      }
     });
     
     // Setup type select in modal
@@ -96,7 +85,6 @@ class WatchList {
   closeModal() {
     this.modal.classList.remove('active');
     this.movieInput.value = '';
-    this.durationInput.value = '';
   }
   
   async addMovie() {
@@ -108,7 +96,7 @@ class WatchList {
     
     const typeSelect = document.querySelector('.type-select-modal');
     const selectedType = typeSelect.dataset.value || 'movie';
-    const duration = this.durationInput.value.trim() || (selectedType === 'movie' ? '2h 30m' : '1 Season');
+    const duration = 'Unknown'; 
     
     const movie = {
       id: Date.now(),
@@ -131,7 +119,7 @@ class WatchList {
   resetModalSelect() {
     const typeSelect = document.querySelector('.type-select-modal');
     typeSelect.dataset.value = 'movie';
-    const header = typeSelect.querySelector('.type-select-header');
+    const header = typeSelect.querySelector('.header-text');
     header.querySelector('.header-text').textContent = 'Movie';
   }
 
@@ -162,78 +150,6 @@ class WatchList {
     this.renderMovies();
   }
   
-  async scanDuration() {
-    const title = this.movieInput.value.trim();
-    const typeSelect = document.querySelector('.type-select-modal');
-    const type = typeSelect.dataset.value || 'movie';
-    
-    if (!title) {
-      this.notifications.show('Please enter a title first', 'error');
-      return;
-    }
-    
-    // Get references to icons
-    const scanButton = document.getElementById('scanButton');
-    const iconContainer = scanButton.querySelector('.icon-container');
-    
-    // Show loading state
-    scanButton.classList.add('scanning');
-    iconContainer.innerHTML = `
-      <svg class="scan-icon" viewBox="0 0 24 24" width="16" height="16">
-        <path d="M12 21a9 9 0 100-18 9 9 0 000 18zm0-2a7 7 0 110-14 7 7 0 010 14z" fill="currentColor"/>
-        <path d="M12 7v5l3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    `;
-    scanButton.disabled = true;
-    
-    try {
-      const response = await fetch('/api/ai_completion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: `Based on the title "${title}" and type "${type}", determine the most likely duration. For movies, respond with the runtime in hours and minutes (e.g. "2h 15m"). For TV series, respond with the number of seasons (e.g. "3 Seasons").
-          
-          interface Response {
-            duration: string;
-            confidence: "high" | "medium" | "low";
-          }
-          
-          {
-            "duration": "2h 32m",
-            "confidence": "high"
-          }
-          `,
-          data: title
-        }),
-      });
-      
-      const data = await response.json();
-      
-      // Update duration input with the scanned result
-      this.durationInput.value = data.duration;
-      
-      // Add a visual feedback based on confidence
-      this.durationInput.setAttribute('title', `AI Confidence: ${data.confidence}`);
-      this.notifications.show(`Duration found: ${data.duration}`, 'success');
-      
-    } catch (error) {
-      console.error('Error scanning duration:', error);
-      this.notifications.show('Failed to scan duration', 'error');
-    } finally {
-      // Remove loading state and restore original icon
-      scanButton.classList.remove('scanning');
-      iconContainer.innerHTML = `
-        <svg class="scan-icon" viewBox="0 0 24 24" width="16" height="16">
-          <path d="M9.5 3.25a6.25 6.25 0 1 0 0 12.5 6.25 6.25 0 1 0 0-12.5zM2 9.5a7.5 7.5 0 1 1 13.1 5.01l6.19 6.19a.75.75 0 0 1-1.06 1.06l-6.19-6.19A7.5 7.5 0 0 1 2 9.5z" fill="currentColor"/>
-        </svg>
-      `;
-      scanButton.disabled = !this.movieInput.value.trim();
-    }
-  }
-
   sortMovies(movies) {
     // First filter by search term
     let filteredMovies = movies;
@@ -520,9 +436,8 @@ class WatchList {
             </div>
           </div>
           <span class="movie-title" data-title="${movie.title}">${movie.title}</span>
-          <span class="tag">${movie.type}</span>
-          <span class="tag">${movie.duration}</span>
-          <span class="tag">${this.formatDate(movie.dateAdded)}</span>
+          <span class="tag type-tag">${movie.type}</span>
+          <span class="tag date-tag">${this.formatDate(movie.dateAdded)}</span>
           <button class="delete-btn" onclick="watchList.deleteMovie(${movie.id})">
             <svg viewBox="0 0 24 24" width="20" height="20">
               <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" 
@@ -572,11 +487,6 @@ class WatchList {
       document.querySelectorAll('.custom-select.open').forEach(select => {
         select.classList.remove('open');
       });
-    });
-
-    // Add click handlers for movie titles
-    document.querySelectorAll('.movie-title').forEach(title => {
-      title.addEventListener('click', () => this.showMovieInfoModal(title.dataset.title));
     });
   }
 
