@@ -1,4 +1,5 @@
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6,58 +7,60 @@
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
 </head>
+
 <body>
   <div class="notifications-container" id="notificationsContainer">
     <!-- Notifications will be added here dynamically -->
   </div>
   <div class="container">
     <header>
-      <h1>Watchlist</h1>
+      <h1>
+        <svg viewBox="0 0 24 24" width="30" height="30" style="margin-right: 0.5rem; margin-bottom: -0.1rem;">
+          <path d="M4 4h16v4h-4l-2-2h-4l-2 2H4V4m0 6h16v4h-4l-2-2h-4l-2 2H4v-4m0 6h16v4H4v-4z" fill="currentColor"/>
+        </svg>
+        Watchlist
+      </h1>
     </header>
-    
+
     <main>
       <div class="controls-bar">
         <button id="addButton" class="sort-button add-button">
           <svg viewBox="0 0 24 24" width="16" height="16">
-            <path d="M12 4v16m-8-8h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 4v16m-8-8h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
           </svg>
         </button>
         <div class="sort-controls">
           <button class="sort-button active desc" data-sort="date">
             Date Added
             <svg class="sort-icon" viewBox="0 0 24 24">
-              <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+              <path d="M7 10l5 5 5-5z" fill="currentColor" />
             </svg>
           </button>
           <button class="sort-button" data-sort="name">
             Name
             <svg class="sort-icon" viewBox="0 0 24 24">
-              <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+              <path d="M7 10l5 5 5-5z" fill="currentColor" />
             </svg>
           </button>
           <button class="sort-button" data-sort="type">
             Type
             <svg class="sort-icon" viewBox="0 0 24 24">
-              <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+              <path d="M7 10l5 5 5-5z" fill="currentColor" />
             </svg>
           </button>
           <button class="sort-button" data-sort="watched">
             Watch Status
             <svg class="sort-icon" viewBox="0 0 24 24">
-              <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+              <path d="M7 10l5 5 5-5z" fill="currentColor" />
             </svg>
           </button>
         </div>
       </div>
 
       <div class="search-bar">
-        <input 
-          type="text" 
-          id="searchInput" 
-          placeholder="Search titles..."
-        >
+        <input type="text" id="searchInput" placeholder="Search titles...">
       </div>
-      
+
       <div class="movie-list" id="movieList">
         <!-- Movies will be added here dynamically -->
       </div>
@@ -79,7 +82,7 @@
             <div class="type-select-header">
               <span class="header-text">Movie</span>
               <svg viewBox="0 0 24 24" width="12" height="12">
-                <path d="M7 10l5 5 5-5z" fill="currentColor"/>
+                <path d="M7 10l5 5 5-5z" fill="currentColor" />
               </svg>
             </div>
             <div class="type-select-options">
@@ -98,4 +101,5 @@
     </div>
   </div>
 </body>
+
 </html>

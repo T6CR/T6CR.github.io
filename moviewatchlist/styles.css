@@ -1,8 +1,8 @@
 :root {
-  --primary-color: #2e7d32;  
+  --primary-color: #2e7d32;
   --bg-color: #1a1a1a;
   --text-color: #ffffff;
-  --hover-color: #1b5e20;    
+  --hover-color: #1b5e20;
   --item-bg: #2d2d2d;
   --border-color: #3d3d3d;
 }
@@ -116,7 +116,7 @@ button:hover {
 }
 
 .sort-button:hover {
-  background: rgba(46, 125, 50, 0.2);  
+  background: rgba(46, 125, 50, 0.2);
 }
 
 .sort-icon {
@@ -146,11 +146,6 @@ button:hover {
 
 .type-select {
   display: none;
-  background: var(--item-bg);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-  padding: 0.5rem;
-  border-radius: 4px;
 }
 
 .type-select-modal {
@@ -208,7 +203,6 @@ button:hover {
 
 .movie-title {
   position: relative;
-  cursor: default;
   flex: 1;
   margin-left: 0.5rem;
   transition: color 0.2s ease;
@@ -227,6 +221,16 @@ button:hover {
 
 .delete-btn:hover {
   background: rgba(255, 82, 82, 0.1);
+}
+
+.edit-btn {
+  background: transparent;
+  padding: 0.5rem;
+  color: #64b5f6; /* Light Blue */
+}
+
+.edit-btn:hover {
+  background: rgba(100, 181, 246, 0.1); /* Light Blue with transparency */
 }
 
 .modal {
@@ -632,35 +636,35 @@ button:hover {
   .container {
     padding: 1rem;
   }
-  
+
   .add-movie {
     flex-direction: column;
   }
-  
+
   button {
     width: 100%;
     justify-content: center;
   }
-  
+
   .movie-item {
     flex-wrap: wrap;
   }
-  
+
   .movie-title {
     width: 100%;
   }
-  
+
   .tag {
     font-size: 0.8rem;
     padding: 0.2rem 0.6rem;
   }
-  
+
   .controls-bar {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .sort-controls {
     width: 100%;
     overflow-x: auto;
@@ -671,7 +675,7 @@ button:hover {
     width: auto;
     margin-bottom: 0;
   }
-  
+
   .search-bar {
     margin: 0.5rem 0;
   }

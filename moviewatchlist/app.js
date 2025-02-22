@@ -9,14 +9,15 @@ class WatchList {
     this.activeTooltip = null;
     this.tooltipTimeout = null;
     this.movieCache = new Map();
-    
+    this.editMovieId = null;
+
     // Add search input listener
     this.searchInput.addEventListener('input', () => {
       this.currentSearch = this.searchInput.value.toLowerCase();
       this.renderMovies();
     });
   }
-  
+
   initElements() {
     this.movieInput = document.getElementById('movieInput');
     this.addButton = document.getElementById('addButton');
@@ -25,29 +26,35 @@ class WatchList {
     this.modal = document.getElementById('addMovieModal');
     this.saveButton = document.getElementById('saveButton');
     this.cancelButton = document.getElementById('cancelButton');
-    this.durationInput = null; 
-    this.scanButton = null; 
+    this.durationInput = null;
+    this.scanButton = null;
     this.currentSort = 'date';
     this.sortDirection = 'desc';
   }
-  
+
   init() {
     this.addButton.addEventListener('click', (e) => {
       e.stopPropagation();
       this.openModal();
     });
-    this.saveButton.addEventListener('click', () => this.addMovie());
+    this.saveButton.addEventListener('click', () => {
+      if (this.editMovieId) {
+        this.updateMovie();
+      } else {
+        this.addMovie();
+      }
+    });
     this.cancelButton.addEventListener('click', () => this.closeModal());
-    
+
     this.sortButtons.forEach(button => {
       button.addEventListener('click', () => this.handleSort(button));
     });
-    
+
     // Close modal when clicking outside
     this.modal.addEventListener('click', (e) => {
       if (e.target === this.modal) this.closeModal();
     });
-    
+
     // Setup type select in modal
     const typeSelect = document.querySelector('.type-select-modal');
     const typeHeader = typeSelect.querySelector('.type-select-header');
@@ -62,7 +69,7 @@ class WatchList {
       option.addEventListener('click', () => {
         const value = option.dataset.value;
         const text = option.textContent;
-        
+
         typeSelect.dataset.value = value;
         typeHeader.querySelector('.header-text').textContent = text;
         typeSelect.classList.remove('open');
@@ -76,28 +83,45 @@ class WatchList {
 
     this.renderMovies();
   }
-  
-  openModal() {
+
+  openModal(movieId = null) {
     this.modal.classList.add('active');
     this.movieInput.focus();
+
+    if (movieId) {
+      this.editMovieId = movieId;
+      const movie = this.movies.find(m => m.id === movieId);
+      if (movie) {
+        this.movieInput.value = movie.title;
+
+        const typeSelect = document.querySelector('.type-select-modal');
+        const typeHeader = typeSelect.querySelector('.type-select-header');
+        typeSelect.dataset.value = movie.type;
+        typeHeader.querySelector('.header-text').textContent = movie.type === 'movie' ? 'Movie' : 'TV Series';
+      }
+    } else {
+      this.editMovieId = null;
+    }
   }
-  
+
   closeModal() {
     this.modal.classList.remove('active');
     this.movieInput.value = '';
+    this.resetModalSelect();
+    this.editMovieId = null;
   }
-  
+
   async addMovie() {
     const title = this.movieInput.value.trim();
     if (!title) {
       this.notifications.show('Please enter a title', 'error');
       return;
     }
-    
+
     const typeSelect = document.querySelector('.type-select-modal');
     const selectedType = typeSelect.dataset.value || 'movie';
-    const duration = 'Unknown'; 
-    
+    const duration = 'Unknown';
+
     const movie = {
       id: Date.now(),
       title,
@@ -106,21 +130,50 @@ class WatchList {
       dateAdded: new Date().toISOString(),
       watchStatus: 'not-watched'
     };
-    
+
     this.movies.push(movie);
     this.saveMovies();
     this.renderMovies();
     this.closeModal();
     this.resetModalSelect();
-    
+
     this.notifications.show(`Successfully added "${title}"`, 'success');
+  }
+
+  async updateMovie() {
+    const title = this.movieInput.value.trim();
+
+    if (!title) {
+      this.notifications.show('Please enter a title', 'error');
+      return;
+    }
+
+    const typeSelect = document.querySelector('.type-select-modal');
+    const selectedType = typeSelect.dataset.value || 'movie';
+
+    const movieIndex = this.movies.findIndex(m => m.id === this.editMovieId);
+
+    if (movieIndex !== -1) {
+      this.movies[movieIndex] = {
+        ...this.movies[movieIndex],
+        title: title,
+        type: selectedType
+      };
+
+      this.saveMovies();
+      this.renderMovies();
+      this.closeModal();
+      this.notifications.show(`Successfully updated "${title}"`, 'success');
+    } else {
+      this.notifications.show('Movie not found', 'error');
+    }
   }
 
   resetModalSelect() {
     const typeSelect = document.querySelector('.type-select-modal');
-    typeSelect.dataset.value = 'movie';
-    const header = typeSelect.querySelector('.header-text');
+    const header = typeSelect.querySelector('.type-select-header');
     header.querySelector('.header-text').textContent = 'Movie';
+    typeSelect.dataset.value = 'movie';
   }
 
   updateWatchStatus(id, status) {
@@ -130,31 +183,31 @@ class WatchList {
       this.saveMovies();
     }
   }
-  
+
   handleSort(button) {
     const sortType = button.dataset.sort;
-    
+
     if (this.currentSort === sortType) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
       this.currentSort = sortType;
       this.sortDirection = 'asc';
     }
-    
+
     // Update button states
     this.sortButtons.forEach(btn => {
       btn.classList.remove('active', 'asc', 'desc');
     });
     button.classList.add('active', this.sortDirection);
-    
+
     this.renderMovies();
   }
-  
+
   sortMovies(movies) {
     // First filter by search term
     let filteredMovies = movies;
     if (this.currentSearch) {
-      filteredMovies = movies.filter(movie => 
+      filteredMovies = movies.filter(movie =>
         movie.title.toLowerCase().includes(this.currentSearch)
       );
     }
@@ -162,7 +215,7 @@ class WatchList {
     // Then sort the filtered results
     return filteredMovies.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (this.currentSort) {
         case 'name':
           comparison = a.title.localeCompare(b.title);
@@ -177,11 +230,11 @@ class WatchList {
           comparison = a.watchStatus === 'watched' ? -1 : 1;
           break;
       }
-      
+
       return this.sortDirection === 'asc' ? comparison : -comparison;
     });
   }
-  
+
   deleteMovie(id) {
     const movie = this.movies.find(m => m.id === id);
     this.movies = this.movies.filter(movie => movie.id !== id);
@@ -189,11 +242,11 @@ class WatchList {
     this.renderMovies();
     this.notifications.show(`"${movie.title}" removed from watchlist`, 'success');
   }
-  
+
   saveMovies() {
     localStorage.setItem('movies', JSON.stringify(this.movies));
   }
-  
+
   formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -201,7 +254,7 @@ class WatchList {
       day: 'numeric'
     });
   }
-  
+
   async fetchMovieInfo(title) {
     // Check cache first
     const cacheKey = `${title}`;
@@ -233,7 +286,7 @@ class WatchList {
       });
 
       const data = await response.json();
-      
+
       // Cache the result
       this.movieCache.set(cacheKey, data);
       return data;
@@ -270,7 +323,7 @@ class WatchList {
 
     try {
       const info = await this.fetchMovieInfo(title);
-      
+
       if (!info) {
         this.notifications.show('Could not fetch media information', 'error');
         infoModal.classList.remove('active');
@@ -435,6 +488,11 @@ class WatchList {
           <span class="movie-title" data-title="${movie.title}">${movie.title}</span>
           <span class="tag type-tag">${movie.type}</span>
           <span class="tag date-tag">${this.formatDate(movie.dateAdded)}</span>
+          <button class="edit-btn" onclick="watchList.editMovie(${movie.id})">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
+            </svg>
+          </button>
           <button class="delete-btn" onclick="watchList.deleteMovie(${movie.id})">
             <svg viewBox="0 0 24 24" width="20" height="20">
               <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" 
@@ -485,8 +543,26 @@ class WatchList {
         select.classList.remove('open');
       });
     });
+
+    // Add event listeners to movie titles to copy name to clipboard
+    document.querySelectorAll('.movie-title').forEach(title => {
+      title.addEventListener('click', async (e) => {
+        const movieTitle = e.target.dataset.title;
+        try {
+          await navigator.clipboard.writeText(movieTitle);
+          this.notifications.show(`"${movieTitle}" title copied to clipboard`, 'success');
+        } catch (err) {
+          console.error('Failed to copy: ', err);
+          this.notifications.show('Failed to copy title to clipboard', 'error');
+        }
+      });
+    });
   }
 
+  editMovie(id) {
+    console.log(`Editing movie with ID: ${id}`);
+    this.openModal(id);
+  }
 }
 
 class NotificationManager {
