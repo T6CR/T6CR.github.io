@@ -1,0 +1,91 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Server Downloader</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <div class="noise"></div>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <svg viewBox="0 0 24 24" width="48" height="48">
+                    <path fill="currentColor" d="M4,2H20A2,2 0 0,1 22,4V20A2,2 0 0,1 20,22H4A2,2 0 0,1 2,20V4A2,2 0 0,1 4,2M6,6V10H10V12H8V18H10V16H14V18H16V12H14V10H18V6H14V10H10V6H6Z" />
+                </svg>
+                <h1>Minecraft Server Downloader</h1>
+            </div>
+        </header>
+        
+        <main>
+            <div class="glass-card">
+                <h2>Select Server Version</h2>
+                <p>Choose a Minecraft server version to download</p>
+                
+                <div class="version-selector">
+                    <div class="version-tabs">
+                        <button class="tab-btn" data-type="all">All</button>
+                        <button class="tab-btn" data-type="release">Release</button>
+                        <button class="tab-btn" data-type="snapshot">Snapshot</button>
+                        <button class="tab-btn" data-type="old_alpha">Old Versions</button>
+                    </div>
+                    
+                    <div class="version-list-container">
+                        <div class="search-box">
+                            <svg viewBox="0 0 24 24" width="24" height="24">
+                                <path fill="currentColor" d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" />
+                            </svg>
+                            <input type="text" placeholder="Search versions..." id="version-search">
+                        </div>
+                        <div class="version-list" id="version-list">
+                            <div class="loading-spinner">
+                                <div class="spinner"></div>
+                                <p>Loading versions...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-card download-section">
+                <h2>Download Server</h2>
+                <div class="selected-version">
+                    <p>Selected version: <span id="selected-version">None</span></p>
+                    <p>Release date: <span id="release-date">None</span></p>
+                </div>
+                
+                <div class="download-progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">Ready to download</p>
+                </div>
+                
+                <div class="download-buttons">
+                    <button class="download-btn" id="download-btn" disabled>
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
+                        </svg>
+                        Download Server.jar
+                    </button>
+                    
+                    <button class="cancel-btn" id="cancel-btn" style="display: none;">
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
+                        </svg>
+                        Cancel Download
+                    </button>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>This tool is not affiliated with Mojang or Microsoft</p>
+            <p>Data sourced from <a href="https://mojang.com/" target="_blank">mojang.com</a></p>
+        </footer>
+    </div>
+    
+    <script type="module" src="script.js"></script>
+</body>
+</html>
