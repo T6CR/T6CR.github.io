@@ -1,0 +1,95 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Endless Wordle</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="glass-panel">
+      <header>
+        <h1>Endless Wordle</h1>
+        <div class="stats">
+          <div class="stat">
+            <span id="games-played">0</span>
+            <label>Games</label>
+          </div>
+          <div class="stat">
+            <span id="current-streak">0</span>
+            <label>Streak</label>
+          </div>
+          <div class="stat">
+            <span id="best-streak">0</span>
+            <label>Best</label>
+          </div>
+        </div>
+      </header>
+      
+      <div id="board-container">
+        <div id="board"></div>
+      </div>
+      
+      <div id="keyboard">
+        <div class="keyboard-row">
+          <button data-key="q">q</button>
+          <button data-key="w">w</button>
+          <button data-key="e">e</button>
+          <button data-key="r">r</button>
+          <button data-key="t">t</button>
+          <button data-key="y">y</button>
+          <button data-key="u">u</button>
+          <button data-key="i">i</button>
+          <button data-key="o">o</button>
+          <button data-key="p">p</button>
+        </div>
+        <div class="keyboard-row">
+          <div class="spacer half"></div>
+          <button data-key="a">a</button>
+          <button data-key="s">s</button>
+          <button data-key="d">d</button>
+          <button data-key="f">f</button>
+          <button data-key="g">g</button>
+          <button data-key="h">h</button>
+          <button data-key="j">j</button>
+          <button data-key="k">k</button>
+          <button data-key="l">l</button>
+          <div class="spacer half"></div>
+        </div>
+        <div class="keyboard-row">
+          <button data-key="enter" class="wide-button">enter</button>
+          <button data-key="z">z</button>
+          <button data-key="x">x</button>
+          <button data-key="c">c</button>
+          <button data-key="v">v</button>
+          <button data-key="b">b</button>
+          <button data-key="n">n</button>
+          <button data-key="m">m</button>
+          <button data-key="backspace" class="wide-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+              <path fill="currentColor" d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <div id="result-modal" class="modal">
+        <div class="modal-content">
+          <h2 id="result-message"></h2>
+          <p id="word-reveal"></p>
+          <button id="next-game">Next Word</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script type="importmap">
+    {
+      "imports": {
+        "confetti": "https://cdn.skypack.dev/canvas-confetti"
+      }
+    }
+  </script>
+  <script src="game.js" type="module"></script>
+</body>
+</html>
